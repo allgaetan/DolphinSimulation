@@ -3,9 +3,9 @@ import java.awt.Color;
 import fr.emse.fayol.maqit.simulator.components.ColorInteractionRobot;
 import fr.emse.fayol.maqit.simulator.components.Message;
 
-public class HelloRobot extends ColorInteractionRobot {
+public class Fish extends ColorInteractionRobot {
 
-    protected HelloRobot(String name, int field, int debug, int[] pos, Color rgb, int rows, int columns) {
+    protected Fish(String name, int field, int debug, int[] pos, Color rgb, int rows, int columns) {
         super(name, field, debug, pos, rgb, rows, columns);
     }
 
@@ -21,7 +21,7 @@ public class HelloRobot extends ColorInteractionRobot {
             this.moveForward();
         }
         else {
-            this.turnLeft();
+            this.turnRight();
         }
         sendMessage(new Message(getId(), "Coordinates [" + x + "," + y + "]"));
     }

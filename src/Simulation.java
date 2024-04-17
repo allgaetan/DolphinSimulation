@@ -10,9 +10,9 @@ import fr.emse.fayol.maqit.simulator.configuration.SimProperties;
 import fr.emse.fayol.maqit.simulator.environment.Cell;
 import fr.emse.fayol.maqit.simulator.environment.ColorGridEnvironment;
 
-public class HelloSimulation extends SimFactory {
+public class Simulation extends SimFactory {
 
-    public HelloSimulation(SimProperties sp) {
+    public Simulation(SimProperties sp) {
         super(sp);
     }
 
@@ -37,8 +37,10 @@ public class HelloSimulation extends SimFactory {
     @Override
     public void createRobot() {
         for (int i = 0; i < sp.nbrobot; i++) {
-            HelloRobot co = new HelloRobot("name" + i, sp.field, sp.debug, environment.getPlace(), sp.colorrobot, sp.rows, sp.columns);
-            addNewComponent(co);   
+            Dolphin dolphin = new Dolphin("dolphin" + i, sp.field, sp.debug, environment.getPlace(), sp.colorrobot, sp.rows, sp.columns);
+            addNewComponent(dolphin);   
+            Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns);
+            addNewComponent(fish);
         } 
     }
 
@@ -52,7 +54,8 @@ public class HelloSimulation extends SimFactory {
                     for (Message m : ((InteractionRobot) t2).popSentMessages()) {
                         if (t.getId() != t2.getId()) {
                             ((InteractionRobot) t).receiveMessage(m);
-                            System.out.println(m);
+                            ((InteractionRobot) t).handleMessage(m);
+                            //System.out.println(m);
                         }
                     }
                 }
@@ -76,7 +79,7 @@ public class HelloSimulation extends SimFactory {
         SimProperties sp = new SimProperties(ifile);
         sp.simulationParams();
         sp.displayParams();
-        HelloSimulation hs = new HelloSimulation(sp);
+        Simulation hs = new Simulation(sp);
         hs.createEnvironment();
         hs.createObstacle();
         hs.createRobot();
