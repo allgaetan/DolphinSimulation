@@ -1,7 +1,6 @@
 import java.util.List;
 
 import fr.emse.fayol.maqit.simulator.SimFactory;
-import fr.emse.fayol.maqit.simulator.components.ColorObstacle;
 import fr.emse.fayol.maqit.simulator.components.InteractionRobot;
 import fr.emse.fayol.maqit.simulator.components.Message;
 import fr.emse.fayol.maqit.simulator.components.Robot;
@@ -18,29 +17,26 @@ public class Simulation extends SimFactory {
 
     @Override
     public void createEnvironment() {
-        environment = new ColorGridEnvironment(sp.rows, sp.columns, sp.debug, sp.seed );
+        environment = new ColorGridEnvironment(sp.rows, sp.columns, sp.debug, sp.seed);
     }
 
     @Override
-    public void createGoal() {
-        // TODO Auto-generated method stub
+    public void createGoal() { 
     }
 
     @Override
     public void createObstacle() {
         for (int i = 0; i < sp.nbobstacle; i++) {
-            ColorObstacle co = new ColorObstacle(environment.getPlace(), sp.colorobstacle);
-            addNewComponent(co);   
-        }   
+            Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns, environment);
+            addNewComponent(fish);
+        }  
     }
 
     @Override
     public void createRobot() {
         for (int i = 0; i < sp.nbrobot; i++) {
-            Dolphin dolphin = new Dolphin("dolphin" + i, sp.field, sp.debug, environment.getPlace(), sp.colorrobot, sp.rows, sp.columns);
+            Dolphin dolphin = new Dolphin("dolphin" + i, sp.field, sp.debug, environment.getPlace(), sp.colorrobot, sp.rows, sp.columns, environment);
             addNewComponent(dolphin);   
-            Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns);
-            addNewComponent(fish);
         } 
     }
 
@@ -48,28 +44,32 @@ public class Simulation extends SimFactory {
     public void schedule() {
         List <Robot> lr = environment.getRobot();
         for (int i = 0; i < sp.step; i++){
-            //System.out.println ("Step: " + i);
+            System.out.println ("Step: " + i);
             for (Robot t: lr) {
-                for (Robot t2: lr) {
-                    for (Message m : ((InteractionRobot) t2).popSentMessages()) {
-                        if (t.getId() != t2.getId()) {
-                            ((InteractionRobot) t).receiveMessage(m);
-                            ((InteractionRobot) t).handleMessage(m);
-                            //System.out.println(m);
+                if (t instanceof Dolphin) {
+                    for (Robot t2: lr) {
+                        for (Message m : ((InteractionRobot) t2).popSentMessages()) {
+                            if (t.getName() != t2.getName()) {
+                                ((InteractionRobot) t).handleMessage(m);
+                            }
                         }
                     }
-                }
-                int[] posr = t.getLocation();
-                Cell[][] p = environment.getNeighbor(t.getX(), t.getY(), t.getField ());
-                t.updatePerception(p);
-                t.move(1);
-                updateEnvironment(posr, t.getLocation());
+                    int[] posr = t.getLocation();
+                    Cell[][] p = environment.getNeighbor(t.getX(), t.getY(), t.getField());
+                    t.updatePerception(p);
+                    t.move(1);
+                    updateEnvironment(posr, t.getLocation());
+                } else {
+                    ((InteractionRobot) t).sendMessage(new Message(t.getId(), t.getX()+";"+t.getY()));
+                    int[] posr = t.getLocation();
+                    System.out.println(posr);
+                }   
             }
             refreshGW();
             try {
                 Thread.sleep(sp.waittime);
             } catch(InterruptedException ie) {
-                System.out.println (ie);
+                System.out.println(ie);
             }
         }
     }
@@ -81,8 +81,8 @@ public class Simulation extends SimFactory {
         sp.displayParams();
         Simulation hs = new Simulation(sp);
         hs.createEnvironment();
-        hs.createObstacle();
         hs.createRobot();
+        hs.createObstacle();
         hs.initializeGW();
         hs.schedule();  
     }
