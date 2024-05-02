@@ -1,6 +1,5 @@
 import java.awt.Color;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import fr.emse.fayol.maqit.simulator.components.ColorInteractionRobot;
@@ -15,32 +14,58 @@ public class Dolphin extends ColorInteractionRobot {
 
     private Map<Integer, int[]> fishPositions;
     public GridEnvironment environment;
+    private Cell[][] neighbors;
+    private int[] closestFishPosition;
 
     protected Dolphin(String name, int field, int debug, int[] pos, Color rgb, int rows, int columns, GridEnvironment environment) {
         super(name, field, debug, pos, rgb, rows, columns);
-        this.fishPositions = new HashMap<>();
         this.environment = environment;
-
     }
 
     @Override
     public void handleMessage(Message msg) {
-        int emitter = msg.getEmitter();
-        int[] position = parsePosition(msg.getContent());
-        this.fishPositions.put(emitter, position);
     }
 
-    private int[] parsePosition(String content) {
-        String[] coordinates = content.split(";");
-        int x = Integer.parseInt(coordinates[0]);
-        int y = Integer.parseInt(coordinates[1]);
-        return new int[] {x, y};
+    public void setNeighbors(Cell[][] neighbors) {
+        this.neighbors = neighbors;
+    }
+
+    public void getFishTarget() {
+        this.fishPositions = new HashMap<>();
+        for (Cell[] line : neighbors) {
+            for (Cell cell : line) {
+                if (cell != null) {
+                    SituatedComponent onCellComponent = cell.getContent();
+                    if (onCellComponent instanceof Robot) {
+                        Robot onCellRobot = (Robot) onCellComponent;
+                        if (onCellRobot.getName().startsWith("fish")) {
+                            this.fishPositions.put(onCellRobot.getId(), onCellRobot.getLocation());
+                        }
+                    }
+                }
+            }
+        }
+        closestFishPosition = getClosestFishPosition();
+    }
+
+    private int[] getClosestFishPosition() {
+        int min = Integer.MAX_VALUE;
+        int[] closestFishPosition = null;
+        for (int[] fishPosition : this.fishPositions.values()) {
+            int dx = fishPosition[0] - this.getX();
+            int dy = fishPosition[1] - this.getY();
+            int distance = dx*dx + dy*dy;
+            if (distance < min) {
+                min = distance;
+                closestFishPosition = fishPosition;
+            }
+        }
+        return closestFishPosition;
     }
 
     @Override
     public void move(int arg0) {
-        //sendMessage(new Message(getId(), x+";"+y));
-        int[] closestFishPosition = getClosestFishPosition();
+        System.out.println(closestFishPosition);
         if (closestFishPosition != null) {
             // Computes width and height distance to the closest fish
             int dx = closestFishPosition[0] - this.getX();
@@ -96,37 +121,9 @@ public class Dolphin extends ColorInteractionRobot {
                     }
                 }
             }
-            // Handles movement or eating
-
-            if (this.freeForward()) {
-                this.moveForward();
-            } else {
-                for (Cell[] row : environment.getNeighbor(this.getX(), this.getY(), this.field)) {
-                    for (Cell cell : row) {
-                        //System.out.println(cell);
-                        if (cell != null && cell.getContent() != null) {
-                            System.out.println(cell.getContent());
-                            handleFishEating();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private int[] getClosestFishPosition() {
-        int min = Integer.MAX_VALUE;
-        int[] closestFishPosition = null;
-        for (int[] fishPosition : this.fishPositions.values()) {
-            int dx = fishPosition[0] - this.getX();
-            int dy = fishPosition[1] - this.getY();
-            int distance = dx*dx + dy*dy;
-            if (distance < min) {
-                min = distance;
-                closestFishPosition = fishPosition;
-            }
-        }
-        return closestFishPosition;
+            this.moveForward();
+            handleFishEating();
+        } else {this.moveForward();}
     }
 
     private void handleFishEating() {
@@ -135,16 +132,8 @@ public class Dolphin extends ColorInteractionRobot {
         SituatedComponent onCellComponent = cell.getContent();
         if (onCellComponent instanceof Robot) {
             Robot onCellRobot = (Robot) onCellComponent;
-            if (onCellRobot.getName().startsWith("fish")) {
-                /*CellWrapper cellWrapper = new CellWrapper(cell);
-                System.out.println(cell);
-                System.out.println(cellWrapper);
-                cellWrapper.removeContent();*/
-
-                List <Robot> lr = environment.getRobot();
-                System.out.println(lr);
-                lr.remove(onCellRobot.getId());
-                System.out.println(lr);
+            if (onCellRobot.getName().startsWith("fish")) {       
+                cell.setContent(null);
             }
         }
     }

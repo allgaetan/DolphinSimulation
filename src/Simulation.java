@@ -27,7 +27,7 @@ public class Simulation extends SimFactory {
     @Override
     public void createObstacle() {
         for (int i = 0; i < sp.nbobstacle; i++) {
-            Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns, environment);
+            Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns);
             addNewComponent(fish);
         }  
     }
@@ -46,24 +46,21 @@ public class Simulation extends SimFactory {
         for (int i = 0; i < sp.step; i++){
             System.out.println ("Step: " + i);
             for (Robot t: lr) {
-                if (t instanceof Dolphin) {
-                    for (Robot t2: lr) {
-                        for (Message m : ((InteractionRobot) t2).popSentMessages()) {
-                            if (t.getName() != t2.getName()) {
-                                ((InteractionRobot) t).handleMessage(m);
-                            }
+                for (Robot t2: lr) {
+                    for (Message m : ((InteractionRobot) t2).sentMessages) {
+                        if (t.getName() != t2.getName()) {
+                            ((InteractionRobot) t).handleMessage(m);
                         }
                     }
-                    int[] posr = t.getLocation();
-                    Cell[][] p = environment.getNeighbor(t.getX(), t.getY(), t.getField());
-                    t.updatePerception(p);
-                    t.move(1);
-                    updateEnvironment(posr, t.getLocation());
-                } else {
-                    ((InteractionRobot) t).sendMessage(new Message(t.getId(), t.getX()+";"+t.getY()));
-                    int[] posr = t.getLocation();
-                    System.out.println(posr);
-                }   
+                }
+                int[] posr = t.getLocation();
+                Cell[][] p = environment.getNeighbor(t.getX(), t.getY(), t.getField());
+                if (t instanceof Dolphin) {
+                    ((Dolphin) t).setNeighbors(p);
+                    ((Dolphin) t).getFishTarget();
+                    ((Dolphin) t).move(1);
+                }
+                updateEnvironment(posr, t.getLocation());
             }
             refreshGW();
             try {
