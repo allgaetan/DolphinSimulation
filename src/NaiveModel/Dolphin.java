@@ -1,3 +1,4 @@
+package NaiveModel;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,12 +66,11 @@ public class Dolphin extends ColorInteractionRobot {
 
     @Override
     public void move(int arg0) {
-        System.out.println(closestFishPosition);
         if (closestFishPosition != null) {
             // Computes width and height distance to the closest fish
             int dx = closestFishPosition[0] - this.getX();
             int dy = closestFishPosition[1] - this.getY();
-            // Chooses the optimal orientation
+            // Chooses the optimal orientation considering the vertical and horizontal distance
             Orientation orientation = getCurrentOrientation();
             if (Math.abs(dx) >= Math.abs(dy)) {
                 if (dx > 0) {
@@ -123,7 +123,7 @@ public class Dolphin extends ColorInteractionRobot {
             }
             this.moveForward();
             handleFishEating();
-        } else {this.moveForward();}
+        } else {this.moveForward();} // Keeps moving forward if no fish are in the field
     }
 
     private void handleFishEating() {

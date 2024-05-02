@@ -1,3 +1,4 @@
+package NaiveModel;
 import java.awt.Color;
 import fr.emse.fayol.maqit.simulator.components.ColorInteractionRobot;
 import fr.emse.fayol.maqit.simulator.components.Message;

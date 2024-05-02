@@ -1,3 +1,4 @@
+package NaiveModel;
 import java.util.List;
 
 import fr.emse.fayol.maqit.simulator.SimFactory;
