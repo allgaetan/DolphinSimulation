@@ -1,4 +1,5 @@
 package NaiveModel;
+
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,12 +67,16 @@ public class Dolphin extends ColorInteractionRobot {
 
     @Override
     public void move(int arg0) {
+        Cell[][] grid = environment.getGrid();
+        Cell currentCell = grid[this.getX()][this.getY()];
+        Cell nextCell = null; // This will contain the next cell according to the direction decision if the movement is allowed
+        Orientation orientation = getCurrentOrientation();
+
         if (closestFishPosition != null) {
             // Computes width and height distance to the closest fish
             int dx = closestFishPosition[0] - this.getX();
             int dy = closestFishPosition[1] - this.getY();
             // Chooses the optimal orientation considering the vertical and horizontal distance
-            Orientation orientation = getCurrentOrientation();
             if (Math.abs(dx) >= Math.abs(dy)) {
                 if (dx > 0) {
                     if (orientation.toString() == "up") {
@@ -84,6 +89,7 @@ public class Dolphin extends ColorInteractionRobot {
                     if (orientation.toString() == "right") {
                         this.turnRight();
                     }
+                    nextCell = grid[this.getX()+1][this.getY()];
                 } else {
                     if (orientation.toString() == "down") {
                         this.turnLeft();
@@ -95,6 +101,7 @@ public class Dolphin extends ColorInteractionRobot {
                     if (orientation.toString() == "right") {
                         this.turnLeft();
                     }
+                    nextCell = grid[this.getX()-1][this.getY()];
                 }
             } else {
                 if (dy > 0) {
@@ -108,6 +115,7 @@ public class Dolphin extends ColorInteractionRobot {
                     if (orientation.toString() == "up") {
                         this.turnRight();
                     }
+                    nextCell = grid[this.getX()][this.getY()+1];
                 } else {
                     if (orientation.toString() == "right") {
                         this.turnLeft();
@@ -119,21 +127,26 @@ public class Dolphin extends ColorInteractionRobot {
                     if (orientation.toString() == "up") {
                         this.turnLeft();
                     }
+                    nextCell = grid[this.getX()][this.getY()-1];
                 }
             }
-            this.moveForward();
-            handleFishEating();
-        } else {this.moveForward();} // Keeps moving forward if no fish are in the field
+            this.updatePerception(this.neighbors);    
+            handleCollision(nextCell);
+        }
+        this.moveForward(); // Keeps moving forward anyway if no fish are in the field
     }
 
-    private void handleFishEating() {
-        Cell[][] grid = environment.getGrid(); 
-        Cell cell = grid[this.getX()][this.getY()];
-        SituatedComponent onCellComponent = cell.getContent();
-        if (onCellComponent instanceof Robot) {
-            Robot onCellRobot = (Robot) onCellComponent;
-            if (onCellRobot.getName().startsWith("fish")) {       
-                cell.setContent(null);
+    private void handleCollision(Cell nextCell) {
+        SituatedComponent onCellComponent = nextCell.getContent();
+        if (onCellComponent != null) {
+            if (onCellComponent instanceof Robot) {
+                Robot onCellRobot = (Robot) onCellComponent;
+                if (onCellRobot.getName().startsWith("fish")) {       
+                    nextCell.removeContent();
+                } else if (onCellRobot.getName().startsWith("dolphin")) {
+                    this.turnLeft();
+                    this.turnLeft();
+                }
             }
         }
     }

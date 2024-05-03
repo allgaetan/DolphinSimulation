@@ -4,7 +4,7 @@
     ],
     "java.project.outputPath": "bin",
     "java.project.referencedLibraries": [
-        "lib\\maqitsimulator-modified.jar",
+        "lib\\maqit-simulator-balbo-1.0.jar",
         "lib\\ini4j-0.5.1.jar"
     ]
 }

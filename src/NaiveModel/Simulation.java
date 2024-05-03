@@ -1,4 +1,5 @@
 package NaiveModel;
+
 import java.util.List;
 
 import fr.emse.fayol.maqit.simulator.SimFactory;
@@ -28,7 +29,7 @@ public class Simulation extends SimFactory {
     @Override
     public void createObstacle() {
         for (int i = 0; i < sp.nbobstacle; i++) {
-            Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns);
+            Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns, sp.nbobstacle, environment);
             addNewComponent(fish);
         }  
     }
@@ -46,6 +47,7 @@ public class Simulation extends SimFactory {
         List <Robot> lr = environment.getRobot();
         for (int i = 0; i < sp.step; i++){
             System.out.println ("Step: " + i);
+            System.out.println("Number of fish left : " + (environment.getRobot().size()-sp.nbrobot) + "/" + sp.nbobstacle);
             for (Robot t: lr) {
                 for (Robot t2: lr) {
                     for (Message m : ((InteractionRobot) t2).sentMessages) {
@@ -54,12 +56,17 @@ public class Simulation extends SimFactory {
                         }
                     }
                 }
+
                 int[] posr = t.getLocation();
-                Cell[][] p = environment.getNeighbor(t.getX(), t.getY(), t.getField());
-                if (t instanceof Dolphin) {
-                    ((Dolphin) t).setNeighbors(p);
-                    ((Dolphin) t).getFishTarget();
-                    ((Dolphin) t).move(1);
+                Cell[][] neighbors = environment.getNeighbor(t.getX(), t.getY(), t.getField());
+                if (t instanceof Dolphin) { // Dolphin behavior
+                    Dolphin d = (Dolphin) t;
+                    d.setNeighbors(neighbors); // Sets the neighbor grid of the dolphin according to its field of perception
+                    d.getFishTarget(); // Gets fish target by checking the closest fish in the perception field
+                    d.move(1); // Handles movement (this includes collision handling, i.e., eating a fish or avoiding collision with another dolphin)
+                } else if (t instanceof Fish) { // Fish behavior
+                    Fish f = (Fish) t;
+                    f.move(1);   
                 }
                 updateEnvironment(posr, t.getLocation());
             }
