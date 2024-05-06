@@ -27,7 +27,7 @@ public class Simulation extends SimFactory {
     }
 
     @Override
-    public void createObstacle() {
+    public void createObstacle() { // Spawns fish
         for (int i = 0; i < sp.nbobstacle; i++) {
             Fish fish = new Fish("fish" + i, sp.field, sp.debug, environment.getPlace(), sp.colorobstacle, sp.rows, sp.columns, sp.nbobstacle, environment);
             addNewComponent(fish);
@@ -35,9 +35,9 @@ public class Simulation extends SimFactory {
     }
 
     @Override
-    public void createRobot() {
+    public void createRobot() { // Spawns dolphins
         for (int i = 0; i < sp.nbrobot; i++) {
-            Dolphin dolphin = new Dolphin("dolphin" + i, sp.field, sp.debug, environment.getPlace(), sp.colorrobot, sp.rows, sp.columns, environment);
+            Dolphin dolphin = new Dolphin("dolphin" + i, 10*sp.field, sp.debug, environment.getPlace(), sp.colorrobot, sp.rows, sp.columns, environment);
             addNewComponent(dolphin);   
         } 
     }
@@ -56,18 +56,23 @@ public class Simulation extends SimFactory {
                         }
                     }
                 }
-
                 int[] posr = t.getLocation();
                 Cell[][] neighbors = environment.getNeighbor(t.getX(), t.getY(), t.getField());
-                if (t instanceof Dolphin) { // Dolphin behavior
+                // Dolphin behavior
+                if (t instanceof Dolphin) { 
                     Dolphin d = (Dolphin) t;
                     d.setNeighbors(neighbors); // Sets the neighbor grid of the dolphin according to its field of perception
                     d.getFishTarget(); // Gets fish target by checking the closest fish in the perception field
                     d.move(1); // Handles movement (this includes collision handling, i.e., eating a fish or avoiding collision with another dolphin)
-                } else if (t instanceof Fish) { // Fish behavior
+                } 
+                // Fish behavior
+                else if (t instanceof Fish) { 
                     Fish f = (Fish) t;
-                    f.move(1);   
+                    f.setNeighbors(neighbors); // Sets the neighbor grid of the fish according to its field of perception
+                    f.getDolphinPrey(); // Gets most dangerous dolhpin prey by checking the closest dolphin in the perception field
+                    f.move(1); // Handles movement (this includes collision handling) 
                 }
+                // Environment update
                 updateEnvironment(posr, t.getLocation());
             }
             refreshGW();

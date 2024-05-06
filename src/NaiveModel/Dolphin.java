@@ -12,6 +12,13 @@ import fr.emse.fayol.maqit.simulator.components.SituatedComponent;
 import fr.emse.fayol.maqit.simulator.environment.Cell;
 import fr.emse.fayol.maqit.simulator.environment.GridEnvironment;
 
+/**
+ * Naive Model for the Dolphin class
+ * 
+ * @author Gaétan Allaire 
+ * @author Karim Bekhti
+ * @author Kim-Tchoy Du
+ */
 public class Dolphin extends ColorInteractionRobot {
 
     private Map<Integer, int[]> fishPositions;
@@ -28,10 +35,18 @@ public class Dolphin extends ColorInteractionRobot {
     public void handleMessage(Message msg) {
     }
 
+    /**
+     * Sets the neighbor grid of the dolphin according to the field of perception
+     * 
+     * @param Cell[][] neighbors
+     */
     public void setNeighbors(Cell[][] neighbors) {
         this.neighbors = neighbors;
     }
 
+    /**
+     * Choose a target between the fish in the field of perception of the dolphin
+     */
     public void getFishTarget() {
         this.fishPositions = new HashMap<>();
         for (Cell[] line : neighbors) {
@@ -47,9 +62,13 @@ public class Dolphin extends ColorInteractionRobot {
                 }
             }
         }
-        closestFishPosition = getClosestFishPosition();
+        this.closestFishPosition = getClosestFishPosition();
     }
 
+    /**
+     * Returns the position of the closest fish in the field of perception of the dolphin
+     * @return closestFishPosition
+     */
     private int[] getClosestFishPosition() {
         int min = Integer.MAX_VALUE;
         int[] closestFishPosition = null;
@@ -66,76 +85,50 @@ public class Dolphin extends ColorInteractionRobot {
     }
 
     @Override
+    /**
+     * Main moving logic of the dolphin in the naive model.
+     * If a closest fish exists (i.e. if at least one fish is in the field of perception of the dolphin), the dolphin will take the direction that brings it the closest to its target.
+     * The dolphin handles collision with another entity with the handleCollision method.
+     * If no fish are in the field of perception of the dolphin, it just keeps moving forward.
+     * @param int arg0
+     */
     public void move(int arg0) {
         Cell[][] grid = environment.getGrid();
-        Cell currentCell = grid[this.getX()][this.getY()];
-        Cell nextCell = null; // This will contain the next cell according to the direction decision if the movement is allowed
-        Orientation orientation = getCurrentOrientation();
+        Cell nextCell = null;
 
         if (closestFishPosition != null) {
-            // Computes width and height distance to the closest fish
             int dx = closestFishPosition[0] - this.getX();
             int dy = closestFishPosition[1] - this.getY();
-            // Chooses the optimal orientation considering the vertical and horizontal distance
             if (Math.abs(dx) >= Math.abs(dy)) {
                 if (dx > 0) {
-                    if (orientation.toString() == "up") {
-                        this.turnLeft();
-                        this.turnLeft();
-                    }
-                    if (orientation.toString() == "left") {
-                        this.turnLeft();
-                    }
-                    if (orientation.toString() == "right") {
-                        this.turnRight();
-                    }
-                    nextCell = grid[this.getX()+1][this.getY()];
+                    this.setCurrentOrientation(Orientation.down);
+                    nextCell = grid[this.getX()+1][this.getY()];  
                 } else {
-                    if (orientation.toString() == "down") {
-                        this.turnLeft();
-                        this.turnLeft();
-                    }
-                    if (orientation.toString() == "left") {
-                        this.turnRight();
-                    }
-                    if (orientation.toString() == "right") {
-                        this.turnLeft();
-                    }
+                    this.setCurrentOrientation(Orientation.up);
                     nextCell = grid[this.getX()-1][this.getY()];
                 }
             } else {
                 if (dy > 0) {
-                    if (orientation.toString() == "left") {
-                        this.turnLeft();
-                        this.turnLeft();
-                    }
-                    if (orientation.toString() == "down") {
-                        this.turnLeft();
-                    }
-                    if (orientation.toString() == "up") {
-                        this.turnRight();
-                    }
+                    this.setCurrentOrientation(Orientation.right);
                     nextCell = grid[this.getX()][this.getY()+1];
                 } else {
-                    if (orientation.toString() == "right") {
-                        this.turnLeft();
-                        this.turnLeft();
-                    }
-                    if (orientation.toString() == "down") {
-                        this.turnRight();
-                    }
-                    if (orientation.toString() == "up") {
-                        this.turnLeft();
-                    }
+                    this.setCurrentOrientation(Orientation.left);
                     nextCell = grid[this.getX()][this.getY()-1];
                 }
             }
             this.updatePerception(this.neighbors);    
-            handleCollision(nextCell);
+            this.handleCollision(nextCell);
         }
-        this.moveForward(); // Keeps moving forward anyway if no fish are in the field
+        this.moveForward(); 
+        return;
     }
 
+    /**
+     * Collisions are handled by checking the type of the object in the cell that is forward to the dolphin.
+     * If the entity is a fish, the fish is "eaten" and the content of the cell is removed.
+     * If the entity is a dolphin, it turns away to avoid collision.
+     * @param Cell nextCell
+     */
     private void handleCollision(Cell nextCell) {
         SituatedComponent onCellComponent = nextCell.getContent();
         if (onCellComponent != null) {
