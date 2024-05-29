@@ -1,4 +1,4 @@
-package NaiveModel;
+package ComplexModel;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import fr.emse.fayol.maqit.simulator.SimFactory;
+import fr.emse.fayol.maqit.simulator.components.Message;
 import fr.emse.fayol.maqit.simulator.components.Robot;
 import fr.emse.fayol.maqit.simulator.configuration.IniFile;
 import fr.emse.fayol.maqit.simulator.configuration.SimProperties;
@@ -26,9 +27,9 @@ public class Simulation extends SimFactory {
         this.totalDistancesMeasured = 0;
 
         try {
-            writer = new BufferedWriter(new FileWriter("naive_model_metrics.csv"));
+            writer = new BufferedWriter(new FileWriter("complex_model_metrics.csv"));
             writer.write("Step;TotalFishCaught;AverageFishCaughtPerDolphin;AverageDistanceToFish\n");
-            writer.flush(); 
+            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -81,11 +82,22 @@ public class Simulation extends SimFactory {
                 if (t instanceof Dolphin) { 
                     Dolphin d = (Dolphin) t;
                     d.setNeighbors(neighbors); // Sets the neighbor grid of the dolphin according to its field of perception
+                    // Communication handling
+                    for (Robot t2: lr) {
+                        if (t2 instanceof Dolphin) { 
+                            Dolphin d2 = (Dolphin) t2;
+                            for (Message m : d2.sentMessages) {
+                                if (d.getName() != d2.getName()) {
+                                    d.handleMessage(m);
+                                }
+                            }
+                        }           
+                    }
                     d.getFishTarget(); // Gets fish target by checking the closest fish in the perception field
                     d.move(1); // Handles movement (this includes collision handling, i.e., eating a fish or avoiding collision with another dolphin)
-                
+                    
                     // Keep track of metrics
-                    stepFishCaught += d.fishCaught;      
+                    stepFishCaught += d.fishCaught;
                     if (d.closestFishPosition != null) {
                         stepTotalDistance += d.calculateDistance(d.closestFishPosition);
                         stepDistancesMeasured++;
@@ -111,11 +123,11 @@ public class Simulation extends SimFactory {
             // Write the data to the CSV file
             try {
                 writer.write(i + ";" + totalFishCaught + ";" + avgFishCaughtPerDolphin + ";" + avgDistanceToFish + "\n");
-                writer.flush(); 
+                writer.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-             
+
             refreshGW();
             try {
                 Thread.sleep(sp.waittime);

@@ -1,4 +1,4 @@
-package NaiveModel;
+package ComplexModel;
 
 import java.awt.Color;
 import java.util.Random;

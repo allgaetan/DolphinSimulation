@@ -1,4 +1,4 @@
-package NaiveModel;
+package ComplexModel;
 
 import java.awt.Color;
 import java.util.HashMap;
@@ -20,20 +20,29 @@ import fr.emse.fayol.maqit.simulator.environment.GridEnvironment;
  */
 public class Dolphin extends ColorInteractionRobot {
 
-    private Map<Integer, int[]> fishPositions;
+    private Map<Integer, int[]> fishPositions; 
     public GridEnvironment environment;
     private Cell[][] neighbors;
-    public int[] closestFishPosition;
+    public int[] closestFishPosition; 
+    private Map<Integer, Integer> targetedFish; 
     public int fishCaught; // Number of fish caught by this dolphin
 
     protected Dolphin(String name, int field, int debug, int[] pos, Color rgb, int rows, int columns, GridEnvironment environment) {
         super(name, field, debug, pos, rgb, rows, columns);
         this.environment = environment;
+        this.targetedFish = new HashMap<>();
         this.fishCaught = 0; 
     }
 
     @Override
-    public void handleMessage(Message msg) {
+    /**
+     * Handles the parsing of the messages with the template : "ID;distance"
+     */ 
+    public void handleMessage(Message msg) { 
+        String message = msg.getContent();
+        Integer ID = Integer.valueOf(message.split(";")[0]);
+        Integer distance = Integer.valueOf(message.split(";")[1]);
+        this.targetedFish.put(ID, distance);
     }
 
     /**
@@ -45,7 +54,8 @@ public class Dolphin extends ColorInteractionRobot {
     }
 
     /**
-     * Choose a target between the fish in the field of perception of the dolphin
+     * Chooses a target between the fish in the field of perception of the dolphin
+     * In this model, the dolphin uses the messages received from the other dolphins to pick a target that is not targeted yet.
      */
     public void getFishTarget() {
         this.fishPositions = new HashMap<>();
@@ -67,20 +77,41 @@ public class Dolphin extends ColorInteractionRobot {
 
     /**
      * Returns the position of the closest fish in the field of perception of the dolphin
+     * In this model, the dolphin uses the messages received from the other dolphins to pick a target that is not targeted yet.
+     * It also ensures that, if the closest fish is already targeted, the dolphin that has it as a target is closer than the dolphin choosing a target.
      * @return closestFishPosition
      */
     private int[] getClosestFishPosition() {
         int min = Integer.MAX_VALUE;
         int dx, dy, distance;
         int[] closestFishPosition = null;
-        for (int[] fishPosition : this.fishPositions.values()) {
+        Integer selectedTargetID = null;
+        for (Map.Entry<Integer, int[]> entry : this.fishPositions.entrySet()) {
+            Integer fishID = entry.getKey();
+            int[] fishPosition = entry.getValue();
             dx = fishPosition[0] - this.getX();
             dy = fishPosition[1] - this.getY();
             distance = dx*dx + dy*dy;
-            if (distance < min) {
+
+            boolean isBetterTarget = false;
+            if (this.targetedFish.containsKey(fishID)) {
+                int otherDistance = this.targetedFish.get(fishID);
+                if (distance < otherDistance) {
+                    isBetterTarget = true;
+                }
+            } else {
+                isBetterTarget = true;
+            }
+
+            if (isBetterTarget && distance < min) {
                 min = distance;
                 closestFishPosition = fishPosition;
+                selectedTargetID = fishID;
             }
+        }
+
+        if (selectedTargetID != null) {
+            sendMessage(new Message(getId(), selectedTargetID + ";" + min));
         }
         return closestFishPosition;
     }
@@ -108,7 +139,7 @@ public class Dolphin extends ColorInteractionRobot {
         this.updatePerception(this.neighbors);   
         Cell[][] grid = environment.getGrid();
         Cell nextCell = null;
-        // Decision process : Orientation towards a fish
+        // Orientation decision process
         if (closestFishPosition != null) {
             int dx = closestFishPosition[0] - this.getX();
             int dy = closestFishPosition[1] - this.getY();
@@ -130,13 +161,6 @@ public class Dolphin extends ColorInteractionRobot {
                 }
             } 
         }
-        // Moving process : Collision handling
-        if (nextCell != null) {
-            this.handleCollision(nextCell);
-            this.updatePerception(this.neighbors);  
-            this.moveForward();
-            return;
-        }
         // Moving process : Border handling
         int border = border(this.getX(), this.getY(), grid);
         if (border > 0) { 
@@ -156,7 +180,14 @@ public class Dolphin extends ColorInteractionRobot {
             this.updatePerception(this.neighbors);  
             this.moveForward();
             return;
-        }  
+        }
+        // Moving process : Collision handling
+        if (nextCell != null) {
+            this.handleCollision(nextCell);
+            this.updatePerception(this.neighbors);  
+            this.moveForward();
+            return;
+        }
         // Moving process : General movement
         if (this.freeForward() && this.freeBackward() && this.freeLeft() && this.freeRight()) {
             this.updatePerception(this.neighbors);  
