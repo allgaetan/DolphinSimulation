@@ -22,10 +22,11 @@ public class Simulation extends SimFactory {
 
     public Simulation(SimProperties sp) {
         super(sp);
+        // Initialize metrics
         this.totalFishCaught = 0;
         this.totalDistance = 0.0;
         this.totalDistancesMeasured = 0;
-
+        // Write metrics to a CSV file
         try {
             writer = new BufferedWriter(new FileWriter("complex_model_metrics.csv"));
             writer.write("Step;TotalFishCaught;AverageFishCaughtPerDolphin;AverageDistanceToFish\n");

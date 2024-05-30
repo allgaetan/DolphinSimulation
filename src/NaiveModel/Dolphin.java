@@ -20,10 +20,10 @@ import fr.emse.fayol.maqit.simulator.environment.GridEnvironment;
  */
 public class Dolphin extends ColorInteractionRobot {
 
-    private Map<Integer, int[]> fishPositions;
+    private Map<Integer, int[]> fishPositions; // Map of the positions of the fish in the field of perception
     public GridEnvironment environment;
-    private Cell[][] neighbors;
-    public int[] closestFishPosition;
+    private Cell[][] neighbors; // Neighbor cells
+    public int[] closestFishPosition; // Position of the closest fish
     public int fishCaught; // Number of fish caught by this dolphin
 
     protected Dolphin(String name, int field, int debug, int[] pos, Color rgb, int rows, int columns, GridEnvironment environment) {
@@ -49,6 +49,7 @@ public class Dolphin extends ColorInteractionRobot {
      */
     public void getFishTarget() {
         this.fishPositions = new HashMap<>();
+
         for (Cell[] line : neighbors) {
             for (Cell cell : line) {
                 if (cell != null) {
@@ -73,6 +74,7 @@ public class Dolphin extends ColorInteractionRobot {
         int min = Integer.MAX_VALUE;
         int dx, dy, distance;
         int[] closestFishPosition = null;
+
         for (int[] fishPosition : this.fishPositions.values()) {
             dx = fishPosition[0] - this.getX();
             dy = fishPosition[1] - this.getY();
@@ -86,7 +88,7 @@ public class Dolphin extends ColorInteractionRobot {
     }
 
     /**
-     * Returns the distance between the dolphin and its target
+     * Returns the distance between the dolphin and a fish
      * @param fishPosition
      * @return
      */
@@ -108,6 +110,7 @@ public class Dolphin extends ColorInteractionRobot {
         this.updatePerception(this.neighbors);   
         Cell[][] grid = environment.getGrid();
         Cell nextCell = null;
+
         // Decision process : Orientation towards a fish
         if (closestFishPosition != null) {
             int dx = closestFishPosition[0] - this.getX();
@@ -130,6 +133,7 @@ public class Dolphin extends ColorInteractionRobot {
                 }
             } 
         }
+        
         // Moving process : Collision handling
         if (nextCell != null) {
             this.handleCollision(nextCell);

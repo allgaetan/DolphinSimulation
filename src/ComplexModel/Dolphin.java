@@ -13,19 +13,19 @@ import fr.emse.fayol.maqit.simulator.environment.Cell;
 import fr.emse.fayol.maqit.simulator.environment.GridEnvironment;
 
 /**
- * Naive Model for the Dolphin class
+ * Complex Model for the Dolphin class
  * @author Gaétan Allaire 
  * @author Karim Bekhti
  * @author Kim-Tchoy Du
  */
 public class Dolphin extends ColorInteractionRobot {
 
-    private Map<Integer, int[]> fishPositions; 
+    private Map<Integer, int[]> fishPositions; // Map of the positions of the fish in the field of perception
     public GridEnvironment environment;
-    private Cell[][] neighbors;
-    public int[] closestFishPosition; 
-    private Map<Integer, Integer> targetedFish; 
+    private Cell[][] neighbors; // Neighbor cells
+    public int[] closestFishPosition; // Position of the closest fish
     public int fishCaught; // Number of fish caught by this dolphin
+    private Map<Integer, Integer> targetedFish; // Map of the IDs of the already targeted fish with their distance to their prey
 
     protected Dolphin(String name, int field, int debug, int[] pos, Color rgb, int rows, int columns, GridEnvironment environment) {
         super(name, field, debug, pos, rgb, rows, columns);
@@ -59,6 +59,7 @@ public class Dolphin extends ColorInteractionRobot {
      */
     public void getFishTarget() {
         this.fishPositions = new HashMap<>();
+
         for (Cell[] line : neighbors) {
             for (Cell cell : line) {
                 if (cell != null) {
@@ -86,6 +87,7 @@ public class Dolphin extends ColorInteractionRobot {
         int dx, dy, distance;
         int[] closestFishPosition = null;
         Integer selectedTargetID = null;
+
         for (Map.Entry<Integer, int[]> entry : this.fishPositions.entrySet()) {
             Integer fishID = entry.getKey();
             int[] fishPosition = entry.getValue();
@@ -109,7 +111,7 @@ public class Dolphin extends ColorInteractionRobot {
                 selectedTargetID = fishID;
             }
         }
-
+        // Send message
         if (selectedTargetID != null) {
             sendMessage(new Message(getId(), selectedTargetID + ";" + min));
         }
@@ -117,7 +119,7 @@ public class Dolphin extends ColorInteractionRobot {
     }
 
     /**
-     * Returns the distance between the dolphin and its target
+     * Returns the distance between the dolphin and a fish
      * @param fishPosition
      * @return
      */
@@ -139,6 +141,7 @@ public class Dolphin extends ColorInteractionRobot {
         this.updatePerception(this.neighbors);   
         Cell[][] grid = environment.getGrid();
         Cell nextCell = null;
+
         // Orientation decision process
         if (closestFishPosition != null) {
             int dx = closestFishPosition[0] - this.getX();
@@ -161,6 +164,7 @@ public class Dolphin extends ColorInteractionRobot {
                 }
             } 
         }
+        
         // Moving process : Border handling
         int border = border(this.getX(), this.getY(), grid);
         if (border > 0) { 

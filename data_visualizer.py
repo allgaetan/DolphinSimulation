@@ -4,7 +4,7 @@ Python script for visualizing the data of the simulation
 
 import pandas as pd
 import matplotlib.pyplot as plt
-
+0
 nmm = pd.read_csv("naive_model_metrics.csv", sep=";")
 cmm = pd.read_csv("complex_model_metrics.csv", sep=";")
 
